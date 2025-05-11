@@ -3,6 +3,7 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
+const fileUpload = require("express-fileupload");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
@@ -41,6 +42,21 @@ const io = socketIo(server, {
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Add file upload middleware
+app.use(
+  fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+    createParentPath: true,
+    abortOnLimit: true,
+  })
+);
+
+// Serve static files from public directory
+app.use("/images", express.static(path.join(__dirname, "public/images")));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Add request logging for debugging
 if (DEBUG) {
@@ -226,6 +242,7 @@ io.on("connection", (socket) => {
       deviceId: data.deviceId,
       message: "Successfully connected to server",
     });
+    3.366
   });
 
   // NodeMCU RFID scan event (when the physical cart scans a product)
