@@ -8,6 +8,8 @@ interface ProductFormData {
   price: string;
   rfidTag: string;
   quantity: string;
+  weight: string;
+  image?: string;
 }
 
 interface InventoryUpdate {
@@ -25,13 +27,17 @@ const AdminProducts: React.FC = () => {
     name: '',
     price: '',
     rfidTag: '',
-    quantity: ''
+    quantity: '',
+    weight: '',
+    image: ''
   });
   const [isEditing, setIsEditing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [inventoryUpdates, setInventoryUpdates] = useState<InventoryUpdate[]>([]);
   const [inventoryView, setInventoryView] = useState(false);
   const [inventoryFilter, setInventoryFilter] = useState<'all' | 'low' | 'out'>('all');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   // Fetch products on component mount
   useEffect(() => {
@@ -53,8 +59,20 @@ const AdminProducts: React.FC = () => {
 
   // Handle form input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, files } = e.target;
+    
+    // Handle file input separately
+    if (name === 'imageUpload' && files && files.length > 0) {
+      const file = files[0];
+      setImageFile(file);
+      
+      // Create a preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    } else {
+      // Handle text inputs
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   // Handle form submission
@@ -62,25 +80,104 @@ const AdminProducts: React.FC = () => {
     e.preventDefault();
     
     try {
+      const productData = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        rfidTag: formData.rfidTag,
+        quantity: parseInt(formData.quantity),
+        weight: formData.weight ? parseFloat(formData.weight) : undefined,
+        image: formData.image
+      };
+      
       if (isEditing && formData.id) {
-        await updateProduct(formData.id, {
-          name: formData.name,
-          price: parseFloat(formData.price),
-          rfidTag: formData.rfidTag,
-          quantity: parseInt(formData.quantity)
-        });
+        await updateProduct(formData.id, productData);
+        
+        // If there's a new image file, upload it after updating the product
+        if (imageFile) {
+          try {
+            await uploadProductImage(formData.id, imageFile);
+          } catch (imageError: any) {
+            console.error('Error uploading image:', imageError);
+            alert(`Product updated but image upload failed: ${imageError.message || 'Unknown error'}`);
+          }
+        }
       } else {
-        await addProduct({
-          name: formData.name,
-          price: parseFloat(formData.price),
-          rfidTag: formData.rfidTag,
-          quantity: parseInt(formData.quantity)
-        });
+        const newProduct = await addProduct(productData);
+        
+        // If there's an image file, upload it after creating the product
+        if (imageFile && newProduct && newProduct.id) {
+          try {
+            await uploadProductImage(newProduct.id, imageFile);
+          } catch (imageError: any) {
+            console.error('Error uploading image:', imageError);
+            alert(`Product created but image upload failed: ${imageError.message || 'Unknown error'}`);
+          }
+        }
+      }
+      
+      // Clean up image preview URL to prevent memory leaks
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+        setImagePreview(null);
       }
       
       closeModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product:', error);
+      alert(`Error saving product: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  // Function to upload product image
+  const uploadProductImage = async (productId: string, file: File) => {
+    try {
+      // Create a FormData object to send the file
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // Always use the render.com URL for images
+      const API_URL = 'https://smart-cart-test.onrender.com/api';
+      
+      console.log('Uploading image to:', `${API_URL}/products/upload-image/${productId}`);
+      console.log('File size:', file.size, 'bytes');
+      console.log('File type:', file.type);
+      console.log('File name:', file.name);
+      
+      // Get the token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+      
+      // Use axios to upload the file instead of fetch
+      const axios = await import('axios');
+      const response = await axios.default.post(
+        `${API_URL}/products/upload-image/${productId}`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data' // Let axios set the proper boundary
+          }
+        }
+      );
+      
+      console.log('Upload response:', response.status, response.data);
+      
+      // Refresh products to show the updated image
+      getProducts();
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      // Extract the error message from axios error
+      let errorMessage = 'Failed to upload image';
+      if (error.response && error.response.data) {
+        errorMessage = error.response.data.message || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      throw new Error(errorMessage);
     }
   };
 
@@ -90,9 +187,13 @@ const AdminProducts: React.FC = () => {
       name: '',
       price: '',
       rfidTag: '',
-      quantity: ''
+      quantity: '',
+      weight: '',
+      image: ''
     });
     setIsEditing(false);
+    setImagePreview(null);
+    setImageFile(null);
     setIsModalOpen(true);
   };
 
@@ -103,9 +204,13 @@ const AdminProducts: React.FC = () => {
       name: product.name,
       price: product.price.toString(),
       rfidTag: product.rfidTag,
-      quantity: product.quantity.toString()
+      quantity: product.quantity.toString(),
+      weight: product.weight ? product.weight.toString() : '',
+      image: product.image || ''
     });
     setIsEditing(true);
+    setImagePreview(product.image || null);
+    setImageFile(null);
     setIsModalOpen(true);
   };
 
@@ -404,7 +509,7 @@ const AdminProducts: React.FC = () => {
                   </div>
                   
                   <div>
-                    <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Price ($)</label>
+                    <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">Price (₹)</label>
                     <input
                       type="number"
                       id="price"
@@ -444,21 +549,75 @@ const AdminProducts: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     />
                   </div>
+                  
+                  <div>
+                    <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">Weight (grams)</label>
+                    <input
+                      type="number"
+                      id="weight"
+                      name="weight"
+                      value={formData.weight}
+                      onChange={handleChange}
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      placeholder="Product weight in grams"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="imageUpload" className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                    <input
+                      type="file"
+                      id="imageUpload"
+                      name="imageUpload"
+                      accept="image/*"
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    />
+                    
+                    {/* Show image preview if available */}
+                    {imagePreview && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500 mb-1">Image Preview:</p>
+                        <div className="w-full h-40 bg-gray-100 rounded-md overflow-hidden">
+                          <img 
+                            src={imagePreview} 
+                            alt="Product preview" 
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Show current image if editing */}
+                    {isEditing && formData.image && !imagePreview && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500 mb-1">Current Image:</p>
+                        <div className="w-full h-40 bg-gray-100 rounded-md overflow-hidden">
+                          <img 
+                            src={formData.image} 
+                            alt="Current product" 
+                            className="w-full h-full object-contain" 
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="mt-6 flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition"
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-md transition"
+                    className="px-4 py-2 bg-primary-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                   >
-                    {isEditing ? 'Update' : 'Add'} Product
+                    {isEditing ? 'Update Product' : 'Add Product'}
                   </button>
                 </div>
               </form>

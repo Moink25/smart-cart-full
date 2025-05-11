@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
 import { useAuth } from '../context/AuthContext.tsx';
 import { useCart } from '../context/CartContext.tsx';
@@ -12,13 +12,46 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) => {
   const { authState } = useAuth();
   const { addToCart } = useCart();
+  const [imageError, setImageError] = useState(false);
 
   const handleAddToCart = () => {
     addToCart(product.id);
   };
 
+  // Default image fallback - using inline data URL
+  const defaultImage = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23cccccc'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' fill='%23333333'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+  // Get the correct image URL based on whether the URL is already absolute or relative
+  const getImageUrl = () => {
+    if (!product.image) return defaultImage;
+    if (imageError) return defaultImage;
+    
+    // If it's already an absolute URL, use it directly
+    if (product.image.startsWith('http')) return product.image;
+    
+    // Always use the render.com URL for images
+    const API_URL = 'https://smart-cart-test.onrender.com';
+    
+    // If the image path already starts with '/images/', just add the base URL
+    if (product.image.startsWith('/images/')) {
+      return `${API_URL}${product.image}`;
+    }
+    
+    // Otherwise, ensure the path has the correct format
+    return `${API_URL}/images/${product.image.replace('/images/', '')}`;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="relative h-48 bg-gray-200">
+        <img 
+          src={getImageUrl()} 
+          alt={product.name}
+          className="w-full h-full object-cover"
+          onError={() => setImageError(true)}
+        />
+      </div>
+
       <div className="p-4">
         <div className="flex justify-between items-start">
           <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
@@ -35,6 +68,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) 
               {' '}{product.quantity} units
             </span>
           </p>
+          {product.weight && (
+            <p className="mt-1">Weight: {product.weight}g</p>
+          )}
         </div>
         
         <div className="mt-4 flex justify-between items-center">

@@ -10,6 +10,8 @@ export interface Product {
   price: number;
   rfidTag: string;
   quantity: number;
+  image?: string;
+  weight?: number;
 }
 
 export interface CartItem extends Product {
@@ -67,7 +69,7 @@ export interface ProductContextType {
   error: string | null;
   getProducts: () => Promise<void>;
   getProduct: (id: string) => Promise<Product | undefined>;
-  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<Product>;
   updateProduct: (id: string, product: Partial<Product>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   clearError: () => void;

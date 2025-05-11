@@ -239,7 +239,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   // Add new product
-  const addProduct = async (product: Omit<Product, 'id'>) => {
+  const addProduct = async (product: Omit<Product, 'id'>): Promise<Product> => {
     dispatch({ type: 'FETCH_PRODUCTS_REQUEST' });
 
     try {

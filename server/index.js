@@ -3,6 +3,7 @@ const express = require("express");
 const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
+const fileUpload = require("express-fileupload");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
@@ -42,6 +43,21 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
+// Add file upload middleware
+app.use(
+  fileUpload({
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    useTempFiles: true,
+    tempFileDir: "/tmp/",
+    createParentPath: true,
+    abortOnLimit: true,
+  })
+);
+
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, "public")));
+app.use("/images", express.static(path.join(__dirname, "public", "images")));
+
 // Add request logging for debugging
 if (DEBUG) {
   app.use((req, res, next) => {
@@ -79,6 +95,8 @@ ensureDataFile("products.json", [
     price: 2.99,
     rfidTag: "A1B2C3D4",
     quantity: 20,
+    weight: 1000,
+    image: "/images/milk.jpg",
   },
   {
     id: "2",
@@ -86,6 +104,8 @@ ensureDataFile("products.json", [
     price: 1.99,
     rfidTag: "E5F6G7H8",
     quantity: 15,
+    weight: 450,
+    image: "/images/bread.jpg",
   },
   {
     id: "3",
@@ -93,6 +113,8 @@ ensureDataFile("products.json", [
     price: 3.49,
     rfidTag: "I9J0K1L2",
     quantity: 30,
+    weight: 720,
+    image: "/images/eggs.jpg",
   },
   {
     id: "4",
@@ -100,6 +122,8 @@ ensureDataFile("products.json", [
     price: 4.99,
     rfidTag: "M3N4O5P6",
     quantity: 10,
+    weight: 250,
+    image: "/images/cheese.jpg",
   },
   {
     id: "5",
@@ -107,6 +131,8 @@ ensureDataFile("products.json", [
     price: 0.99,
     rfidTag: "Q7R8S9T0",
     quantity: 50,
+    weight: 1000,
+    image: "/images/apples.jpg",
   },
 ]);
 

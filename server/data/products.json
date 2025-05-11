@@ -4,34 +4,71 @@
     "name": "Milk",
     "price": 2.99,
     "rfidTag": "A1B2C3D4",
-    "quantity": 20
+    "quantity": 20,
+    "weight": 1000,
+    "image": "/images/milk.jpg"
   },
   {
     "id": "2",
     "name": "Bread",
     "price": 1.99,
     "rfidTag": "E5F6G7H8",
-    "quantity": 15
+    "quantity": 15,
+    "weight": 450,
+    "image": "/images/bread.jpg"
   },
   {
     "id": "3",
-    "name": "Eggs",
+    "name": "Eggs (12-pack)",
     "price": 3.49,
     "rfidTag": "I9J0K1L2",
-    "quantity": 30
+    "quantity": 30,
+    "weight": 720,
+    "image": "/images/eggs.jpg"
   },
   {
     "id": "4",
     "name": "Cheese",
     "price": 4.99,
     "rfidTag": "M3N4O5P6",
-    "quantity": 10
+    "quantity": 10,
+    "weight": 250,
+    "image": "/images/cheese.jpg"
   },
   {
     "id": "5",
-    "name": "Apples",
-    "price": 0.99,
+    "name": "Apples (1kg)",
+    "price": 2.99,
     "rfidTag": "Q7R8S9T0",
-    "quantity": 50
+    "quantity": 50,
+    "weight": 1000,
+    "image": "/images/apples.jpg"
+  },
+  {
+    "id": "6",
+    "name": "Rice (5kg)",
+    "price": 8.99,
+    "rfidTag": "U1V2W3X4",
+    "quantity": 25,
+    "weight": 5000,
+    "image": "/images/rice.jpg"
+  },
+  {
+    "id": "7",
+    "name": "Cereal",
+    "price": 3.99,
+    "rfidTag": "Y5Z6A7B8",
+    "quantity": 18,
+    "weight": 750,
+    "image": "/images/cereal.jpg"
+  },
+  {
+    "id": "8",
+    "name": "Coffee",
+    "price": 5.99,
+    "rfidTag": "C9D0E1F2",
+    "quantity": 22,
+    "weight": 500,
+    "image": "/images/coffee.jpg"
   }
 ]
