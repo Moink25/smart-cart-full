@@ -4,6 +4,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
+const fileUpload = require("express-fileupload");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
@@ -252,6 +253,7 @@ io.on("connection", (socket) => {
       deviceId: data.deviceId,
       message: "Successfully connected to server",
     });
+    3.366
   });
 
   // NodeMCU RFID scan event (when the physical cart scans a product)

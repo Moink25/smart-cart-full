@@ -78,6 +78,7 @@ router.get("/:id", (req, res) => {
 // Create new product (admin only)
 router.post("/", authRoutes.authenticateToken, isAdmin, (req, res) => {
   const { name, price, rfidTag, quantity, weight, image } = req.body;
+  const { name, price, rfidTag, quantity, weight, image } = req.body;
 
   if (!name || !price || !rfidTag || quantity === undefined) {
     return res
@@ -107,6 +108,8 @@ router.post("/", authRoutes.authenticateToken, isAdmin, (req, res) => {
     quantity: parseInt(quantity),
     weight: weight ? parseFloat(weight) : undefined,
     image: image || undefined,
+    weight: weight ? parseFloat(weight) : undefined,
+    image: image || undefined,
   };
 
   products.push(newProduct);
@@ -117,6 +120,7 @@ router.post("/", authRoutes.authenticateToken, isAdmin, (req, res) => {
 
 // Update product (admin only)
 router.put("/:id", authRoutes.authenticateToken, isAdmin, (req, res) => {
+  const { name, price, rfidTag, quantity, weight, image } = req.body;
   const { name, price, rfidTag, quantity, weight, image } = req.body;
   const products = getProductsFromFile();
   const productIndex = products.findIndex((p) => p.id === req.params.id);
@@ -149,6 +153,9 @@ router.put("/:id", authRoutes.authenticateToken, isAdmin, (req, res) => {
     weight:
       weight !== undefined ? parseFloat(weight) : products[productIndex].weight,
     image: image !== undefined ? image : products[productIndex].image,
+    weight:
+      weight !== undefined ? parseFloat(weight) : products[productIndex].weight,
+    image: image !== undefined ? image : products[productIndex].image,
   };
 
   saveProductsToFile(products);
@@ -166,6 +173,24 @@ router.delete("/:id", authRoutes.authenticateToken, isAdmin, (req, res) => {
   }
 
   const deletedProduct = products[productIndex];
+
+  // If product has an image, try to delete it
+  if (deletedProduct.image) {
+    const imagePath = path.join(
+      __dirname,
+      "..",
+      "public",
+      deletedProduct.image
+    );
+    if (fs.existsSync(imagePath)) {
+      try {
+        fs.unlinkSync(imagePath);
+      } catch (error) {
+        console.error("Failed to delete image file:", error);
+      }
+    }
+  }
+
 
   // If product has an image, try to delete it
   if (deletedProduct.image) {
