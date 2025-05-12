@@ -7,6 +7,7 @@ import { PaymentProvider } from './context/PaymentContext.tsx';
 import Navbar from './components/Navbar.tsx';
 import ProtectedRoute from './components/ProtectedRoute.tsx';
 import Login from './pages/Login.tsx';
+import AdminHome from './pages/AdminHome.tsx';
 import AdminProducts from './pages/AdminProducts.tsx';
 import RfidSimulator from './pages/RfidSimulator.tsx';
 import CustomerHome from './pages/CustomerHome.tsx';
@@ -40,6 +41,19 @@ const DataInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) 
   return <>{children}</>;
 };
 
+// Role-based home page component
+const RoleBasedHome: React.FC = () => {
+  const { authState } = useAuth();
+  
+  // If user is an admin, show admin home page
+  if (authState.user?.role === 'admin') {
+    return <AdminHome />;
+  }
+  
+  // Otherwise, show customer home page
+  return <CustomerHome />;
+};
+
 const App: React.FC = () => {
   return (
     <Router>
@@ -54,17 +68,21 @@ const App: React.FC = () => {
                     {/* Public routes */}
                     <Route path="/login" element={<Login />} />
                     
+                    {/* Protected routes - shared */}
+                    <Route element={<ProtectedRoute allowedRoles={['customer', 'admin']} />}>
+                      <Route path="/" element={<RoleBasedHome />} />
+                    </Route>
+                    
                     {/* Customer routes */}
                     <Route element={<ProtectedRoute allowedRoles={['customer']} />}>
-                      <Route path="/" element={<CustomerHome />} />
                       <Route path="/cart" element={<Cart />} />
                     </Route>
                     
                     {/* Admin routes */}
                     <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+                      <Route path="/admin" element={<AdminHome />} />
                       <Route path="/admin/products" element={<AdminProducts />} />
                       <Route path="/admin/simulator" element={<RfidSimulator />} />
-                      <Route path="/admin" element={<Navigate to="/admin/products" replace />} />
                     </Route>
                     
                     {/* Redirect to login if no match */}

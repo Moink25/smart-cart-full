@@ -15,12 +15,8 @@ const Login: React.FC = () => {
     try {
       await login(username, password);
       
-      // Redirect based on role
-      if (authState.user?.role === 'admin') {
-        navigate('/admin/products');
-      } else {
-        navigate('/');
-      }
+      // Redirect all users to root path after login, routing will handle role-based views
+      navigate('/');
     } catch (error) {
       console.error('Login failed:', error);
     }

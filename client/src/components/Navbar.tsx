@@ -29,6 +29,7 @@ const Navbar: React.FC = () => {
                 
                 {authState.user?.role === 'admin' ? (
                   <>
+                    <Link to="/" className="hover:text-blue-200 transition">Dashboard</Link>
                     <Link to="/admin/products" className="hover:text-blue-200 transition">Products</Link>
                     <Link to="/admin/simulator" className="hover:text-blue-200 transition">RFID Simulator</Link>
                   </>
@@ -77,6 +78,7 @@ const Navbar: React.FC = () => {
               <>
                 {authState.user?.role === 'admin' ? (
                   <>
+                    <li><Link to="/" className="block px-2 py-3 hover:bg-primary-800 transition">Dashboard</Link></li>
                     <li><Link to="/admin/products" className="block px-2 py-3 hover:bg-primary-800 transition">Products</Link></li>
                     <li><Link to="/admin/simulator" className="block px-2 py-3 hover:bg-primary-800 transition">RFID Simulator</Link></li>
                   </>

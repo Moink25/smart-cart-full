@@ -1,6 +1,6 @@
 client/node_modules
-./client/dist
-./client/build
+client/dist
+client/build
 ./client/public/uploads
 ./client/public/uploads/*
 ./server/uploads
